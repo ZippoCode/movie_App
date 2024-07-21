@@ -2,13 +2,6 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
-class Genre(models.Model):
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-
 class Movie(models.Model):
     title = models.CharField(max_length=255)
     # director = models.CharField(max_length=255, blank=True, null=True)
@@ -36,3 +29,15 @@ class UserPreference(models.Model):
 
     def __str__(self):
         return f'{self.user.username} likes {self.movie.title}'
+
+
+class UserRating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = ('user', 'movie')
+
+    def __str__(self):
+        return f'{self.user.username} voted {self.movie.title} with rating {self.rating}'

@@ -1,11 +1,12 @@
 from django.contrib.auth.models import User
+from rest_framework import generics
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Movie, Genre, UserPreference
-from .serializers import MovieSerializer, GenreSerializer
+from .models import Movie, UserPreference, UserRating
+from .serializers import MovieSerializer, UserRatingSerializer
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -13,9 +14,9 @@ class MovieViewSet(viewsets.ModelViewSet):
     serializer_class = MovieSerializer
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+class UserRatingListCreate(generics.ListCreateAPIView):
+    queryset = UserRating.objects.all()
+    serializer_class = UserRatingSerializer
 
 
 @api_view(['POST'])

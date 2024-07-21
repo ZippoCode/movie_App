@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Custom APPs
-    'movies',
+    'movies.apps.MoviesConfig',
 
     # Third-Party Apps
     'rest_framework',  # Used for APIs
