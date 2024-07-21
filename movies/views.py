@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Movie, UserPreference, UserRating
-from .serializers import MovieSerializer, UserRatingSerializer
+from .models import Movie, UserPreference, UserRating, Genre
+from .serializers import MovieSerializer, UserRatingSerializer, GenreSerializer
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -17,6 +19,16 @@ class MovieViewSet(viewsets.ModelViewSet):
 class UserRatingListCreate(generics.ListCreateAPIView):
     queryset = UserRating.objects.all()
     serializer_class = UserRatingSerializer
+
+
+class GenreListCreate(generics.ListCreateAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class GenreRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 
 @api_view(['POST'])
@@ -53,3 +65,9 @@ def user_favorites(request):
         return Response({'favorites': movie_data}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+def movies_by_genre(request, genre_id):
+    genre = get_object_or_404(Genre, id=genre_id)
+    movies = Movie.objects.filter(genres=genre).values('id', 'title', 'release_year', 'overview', 'price')
+    return JsonResponse({'genre': genre.name, 'movies': list(movies)})

@@ -2,11 +2,21 @@ import os
 import random
 from datetime import datetime
 from pathlib import Path
+
 import requests
-from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
+from django.core.management.base import BaseCommand
 from dotenv import load_dotenv
+
 from movies.models import Movie
+
+# Define API paths
+PATH_SEARCH = "https://api.themoviedb.org/3/search/movie?api_key={}&query={}"
+PATH_SIMILAR_MOVIES = 'https://api.themoviedb.org/3/movie/{}/similar?api_key={}'
+
+env_path = Path('') / '.env'
+load_dotenv(dotenv_path=env_path)
+APIKEY_TMDB = os.getenv('APIKEY_TMDB')
 
 
 class Command(BaseCommand):
@@ -14,17 +24,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Load environment variables
-        env_path = Path('') / '.env'
-        load_dotenv(dotenv_path=env_path)
-        APIKEY_TMDB = os.getenv('APIKEY_TMDB')
 
         if APIKEY_TMDB is None:
             self.stdout.write(self.style.ERROR("Not found API TMDB KEY. Exit."))
             return
-
-        # Define API paths
-        PATH_SEARCH = "https://api.themoviedb.org/3/search/movie?api_key={}&query={}"
-        PATH_SIMILAR_MOVIES = 'https://api.themoviedb.org/3/movie/{}/similar?api_key={}'
 
         def get_value(json_object, field):
             field_value = json_object.get(field, None)
