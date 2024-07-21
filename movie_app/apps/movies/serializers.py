@@ -12,7 +12,6 @@ class GenreSerializer(serializers.ModelSerializer):
 class MovieSerializer(serializers.ModelSerializer):
     genres = GenreSerializer(many=True, read_only=True)
     genre_names = serializers.ListField(child=serializers.CharField(), write_only=True)
-    release_date = serializers.DateField(format="%Y-%m-%d", input_formats=['%Y-%m-%d'])
 
     class Meta:
         model = Movie
