@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Movie, Genre
+from .models import Movie, Genre, UserPreference
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -23,3 +23,10 @@ class MovieSerializer(serializers.ModelSerializer):
         genres = [Genre.objects.get_or_create(name=name)[0] for name in genre_names]
         movie.genres.set(genres)
         return movie
+
+
+class UserPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreference
+        fields = ['id', 'user', 'movie']
+        read_only_fields = ['id']

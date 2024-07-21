@@ -6,7 +6,7 @@ import requests
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
 from dotenv import load_dotenv
-from apps.movies.models import Movie
+from movies.models import Movie
 
 
 class Command(BaseCommand):
