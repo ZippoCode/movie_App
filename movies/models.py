@@ -2,9 +2,10 @@ from django.contrib.auth.models import User
 
 from django.db import models
 
+from movies.utils.validator import validate_rating
+
 
 class Genre(models.Model):
-    id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -17,7 +18,6 @@ class Movie(models.Model):
     release_year = models.IntegerField(blank=True, null=True)
     overview = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
     genres = models.ManyToManyField(Genre, related_name='movies')
 
     class Meta:
@@ -42,7 +42,7 @@ class UserPreference(models.Model):
 class UserRating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField()
+    rating = models.PositiveSmallIntegerField(validators=[validate_rating])
 
     class Meta:
         unique_together = ('user', 'movie')

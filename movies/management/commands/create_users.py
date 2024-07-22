@@ -49,29 +49,25 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f'No movies available for user {user_id}'))
                 continue
 
-            # Randomly shuffle movies
-            shuffled_movies = random.sample(movies, len(movies))
+            num_movies = len(movies)
+            num_ratings = random.randint(0, 100)
+            num_preferences = random.randint(0, 100)
 
-            # Split movies into two parts
-            num_movies = len(shuffled_movies)
-            split_point = num_movies // 2
+            shuffled_movies = random.sample(movies, num_movies)
+            rating_movies = shuffled_movies[:num_ratings]
+            preference_movies = shuffled_movies[:num_preferences]
 
-            # First half for preferences, second half for ratings
-            preference_movies = shuffled_movies[:split_point]
-            rating_movies = shuffled_movies[split_point:]
-
+            # Add preferences
             for movie in preference_movies:
                 if not UserPreference.objects.filter(user_id=user_id, movie=movie).exists():
                     preferences.append(UserPreference(user_id=user_id, movie=movie))
-                    self.stdout.write(self.style.SUCCESS(f'User {user_id} added favorite movie {movie.title}'))
 
+            # Add ratings
             for movie in rating_movies:
                 if not UserRating.objects.filter(user_id=user_id, movie=movie).exists():
-                    rating = random.randint(1, 5)
+                    rating = random.randint(1, 10)
                     ratings_data.append(UserRating(user_id=user_id, movie=movie, rating=rating))
-                    self.stdout.write(self.style.SUCCESS(f'User {user_id} rated movie {movie.title} with {rating}'))
 
-        # Bulk create preferences and ratings
         UserPreference.objects.bulk_create(preferences)
         UserRating.objects.bulk_create(ratings_data)
         self.stdout.write(self.style.SUCCESS('Successfully added preferences and ratings'))
