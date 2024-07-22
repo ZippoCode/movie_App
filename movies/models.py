@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
-
 from django.db import models
+from django.db.models import Avg
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from movies.utils.validator import validate_rating
 
@@ -19,6 +21,8 @@ class Movie(models.Model):
     overview = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     genres = models.ManyToManyField(Genre, related_name='movies')
+    num_votes = models.PositiveIntegerField(default=0)
+    average_rating = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ('title', 'release_year')
@@ -26,6 +30,12 @@ class Movie(models.Model):
 
     def __str__(self):
         return str(self.title)
+
+    def update_rating_stats(self):
+        ratings = UserRating.objects.filter(movie=self)
+        self.num_ratings = ratings.count()
+        self.avg_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0.0
+        self.save()
 
 
 class UserPreference(models.Model):
@@ -49,3 +59,8 @@ class UserRating(models.Model):
 
     def __str__(self):
         return f'{self.user.username} voted {self.movie.title} with rating {self.rating}'
+
+
+@receiver(post_save, sender=UserRating)
+def update_movie_ratings(sender, instance, **kwargs):
+    instance.movie.update_rating_stats()

@@ -50,8 +50,8 @@ class Command(BaseCommand):
                 continue
 
             num_movies = len(movies)
-            num_ratings = random.randint(0, 100)
-            num_preferences = random.randint(0, 100)
+            num_ratings = random.randint(0, min(100, num_movies))  # Ensure we don't exceed the number of movies
+            num_preferences = random.randint(0, min(100, num_movies))  # Ensure we don't exceed the number of movies
 
             shuffled_movies = random.sample(movies, num_movies)
             rating_movies = shuffled_movies[:num_ratings]
@@ -62,12 +62,19 @@ class Command(BaseCommand):
                 if not UserPreference.objects.filter(user_id=user_id, movie=movie).exists():
                     preferences.append(UserPreference(user_id=user_id, movie=movie))
 
-            # Add ratings
+            # Add or update ratings
             for movie in rating_movies:
-                if not UserRating.objects.filter(user_id=user_id, movie=movie).exists():
-                    rating = random.randint(1, 10)
-                    ratings_data.append(UserRating(user_id=user_id, movie=movie, rating=rating))
+                rating = random.randint(1, 10)
+                UserRating.objects.update_or_create(
+                    user_id=user_id,
+                    movie=movie,
+                    defaults={'rating': rating}
+                )
+                self.stdout.write(
+                    self.style.SUCCESS(f'Updated rating for movie {movie.title} by user {user_id} to {rating}'))
 
-        UserPreference.objects.bulk_create(preferences)
-        UserRating.objects.bulk_create(ratings_data)
-        self.stdout.write(self.style.SUCCESS('Successfully added preferences and ratings'))
+        if preferences:
+            UserPreference.objects.bulk_create(preferences)
+            self.stdout.write(self.style.SUCCESS('Successfully added preferences'))
+
+        self.stdout.write(self.style.SUCCESS('Successfully updated ratings'))
