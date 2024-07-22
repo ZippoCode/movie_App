@@ -45,18 +45,33 @@ class Command(BaseCommand):
         ratings_data = []
 
         for user_id in user_ids:
-            favorite_movies = random.sample(movies, min(10, len(movies)))
-            for movie in favorite_movies:
+            if not movies:
+                self.stdout.write(self.style.WARNING(f'No movies available for user {user_id}'))
+                continue
+
+            # Randomly shuffle movies
+            shuffled_movies = random.sample(movies, len(movies))
+
+            # Split movies into two parts
+            num_movies = len(shuffled_movies)
+            split_point = num_movies // 2
+
+            # First half for preferences, second half for ratings
+            preference_movies = shuffled_movies[:split_point]
+            rating_movies = shuffled_movies[split_point:]
+
+            for movie in preference_movies:
                 if not UserPreference.objects.filter(user_id=user_id, movie=movie).exists():
                     preferences.append(UserPreference(user_id=user_id, movie=movie))
                     self.stdout.write(self.style.SUCCESS(f'User {user_id} added favorite movie {movie.title}'))
-                rating = random.randint(1, 5)
+
+            for movie in rating_movies:
                 if not UserRating.objects.filter(user_id=user_id, movie=movie).exists():
+                    rating = random.randint(1, 5)
                     ratings_data.append(UserRating(user_id=user_id, movie=movie, rating=rating))
                     self.stdout.write(self.style.SUCCESS(f'User {user_id} rated movie {movie.title} with {rating}'))
 
+        # Bulk create preferences and ratings
         UserPreference.objects.bulk_create(preferences)
-        self.stdout.write(self.style.SUCCESS('Successfully assigned random favorite movies to users'))
-
         UserRating.objects.bulk_create(ratings_data)
-        self.stdout.write(self.style.SUCCESS('Successfully assigned random ratings to favorite movies'))
+        self.stdout.write(self.style.SUCCESS('Successfully added preferences and ratings'))
