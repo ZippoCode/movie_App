@@ -38,7 +38,6 @@ class Command(BaseCommand):
         df = df[~df['genres'].apply(lambda genres: any(genre.strip().lower() == 'short' for genre in genres))]
 
         df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-        print(df[:15])
 
         for index, row in tqdm(df.iterrows(), total=df.shape[0], desc="Processing Rows"):
             title = row['primaryTitle']
