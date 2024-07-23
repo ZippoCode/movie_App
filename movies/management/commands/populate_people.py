@@ -5,13 +5,6 @@ from tqdm import tqdm
 from movies.models import Person
 
 
-def clean_value(value, value_type=int):
-    try:
-        return value_type(value)
-    except ValueError:
-        return None
-
-
 class Command(BaseCommand):
     help = 'Populate the database with movie data from a CSV file'
 

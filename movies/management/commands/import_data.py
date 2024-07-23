@@ -15,10 +15,14 @@ class Command(BaseCommand):
         csv_file = kwargs['csv_file']
         df = pd.read_csv(csv_file, low_memory=False)
 
-        for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Processing Movie"):
+        modified_count = 0
+        progress_bar = tqdm(total=df.shape[0], desc="Processing Movies (0 updated)")
+        for _, row in df.iterrows():
             imdb_id = row.get('imdb_id')
             overview = row.get('overview')
-
+            vote_count = row.get('vote_count')
+            vote_average = row.get('vote_average')
+            popularity = row.get('popularity')
             if not imdb_id:
                 continue
 
@@ -26,4 +30,12 @@ class Command(BaseCommand):
 
             if movie:
                 movie.overview = overview if pd.notna(overview) else movie.overview
+                movie.num_votes = vote_count if pd.notna(vote_count) else movie.num_votes
+                movie.average_rating = vote_average if pd.notna(vote_average) else movie.average_rating
+                movie.popularity = popularity if pd.notna(popularity) else movie.popularity
                 movie.save()
+                modified_count += 1
+                progress_bar.set_description(f"Processing Movies ({modified_count} updated)")
+            progress_bar.update(1)
+        progress_bar.close()
+

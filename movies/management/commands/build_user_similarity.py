@@ -16,11 +16,16 @@ class Command(BaseCommand):
 
         try:
             ratings = pd.read_sql_query("SELECT * FROM movies_userrating", connection)
+            movies = pd.read_sql_query("SELECT * FROM movies_movie", connection)
+            genres = pd.read_sql_query("SELECT * FROM movies_genre", connection)
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error loading tables: {e}"))
             connection.close()
             return
+        print(movies.head())
+        df_no_genre = movies[movies['genres'].isnull()]
 
+        print(df_no_genre)
         user_movie_ratings = ratings.pivot_table(index='user_id', columns='movie_id', values='rating')
         user_movie_ratings.fillna(0, inplace=True)
 

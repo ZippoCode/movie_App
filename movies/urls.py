@@ -17,6 +17,5 @@ urlpatterns = [
     path('genres/<int:pk>/', GenreRetrieveUpdateDestroy.as_view(), name='genre-detail'),
     path('genres/<int:genre_id>/movies/', movies_by_genre, name='movies_by_genre'),
     path('recommendations/<int:user_id>/', recommend_movies, name='recommend_movies'),
-    path('recommendations/<int:user_id>/', recommend_movies, name='recommend_movies'),
     path('user/<int:user_id>/statistics/', user_statistics, name='user_favorite_genre_statistics'),
 ]

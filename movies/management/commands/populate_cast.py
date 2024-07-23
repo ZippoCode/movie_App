@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
         # Clear DataFrame
         df = df[df['characters'] != '\\N']
+        df = df[df['category'].isin(['director', 'actor', 'actress'])]
         df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
         for index, row in tqdm(df.iterrows(), total=df.shape[0], desc="Processing Rows"):

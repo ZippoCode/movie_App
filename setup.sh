@@ -11,3 +11,7 @@ echo "Virtual environment $ENV_NAME activated."
 # Install the necessary packages
 pip install -r requirements.txt
 echo "Packages installed from requirements.txt."
+
+# Configure environment
+python3 manage.py makemigrations movies
+python3 manage.py migrate

@@ -2,6 +2,7 @@ import random
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
 from movies.models import Movie, UserPreference, UserRating
 
@@ -42,16 +43,15 @@ class Command(BaseCommand):
         user_ids = list(User.objects.values_list('id', flat=True))
 
         preferences = []
-        ratings_data = []
 
-        for user_id in user_ids:
+        for user_id in tqdm(user_ids, total=len(user_ids)):
             if not movies:
                 self.stdout.write(self.style.WARNING(f'No movies available for user {user_id}'))
                 continue
 
             num_movies = len(movies)
-            num_ratings = random.randint(0, min(100, num_movies))  # Ensure we don't exceed the number of movies
-            num_preferences = random.randint(0, min(100, num_movies))  # Ensure we don't exceed the number of movies
+            num_ratings = random.randint(0, min(30000, num_movies))
+            num_preferences = random.randint(0, min(1000, num_movies))
 
             shuffled_movies = random.sample(movies, num_movies)
             rating_movies = shuffled_movies[:num_ratings]
@@ -70,8 +70,6 @@ class Command(BaseCommand):
                     movie=movie,
                     defaults={'rating': rating}
                 )
-                self.stdout.write(
-                    self.style.SUCCESS(f'Updated rating for movie {movie.title} by user {user_id} to {rating}'))
 
         if preferences:
             UserPreference.objects.bulk_create(preferences)

@@ -23,6 +23,7 @@ class Movie(models.Model):
     genres = models.ManyToManyField(Genre, related_name='movies')
     num_votes = models.PositiveIntegerField(default=0)
     average_rating = models.FloatField(default=0.0)
+    popularity = models.FloatField(default=0.0)
     imdb_id = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
