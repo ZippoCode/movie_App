@@ -19,6 +19,9 @@ class Command(BaseCommand):
             imdb_id = row.get('imdb_id')
             overview = row.get('overview')
 
+            if not imdb_id:
+                continue
+
             movie = Movie.objects.filter(imdb_id=imdb_id).first()
 
             if movie:

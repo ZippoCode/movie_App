@@ -39,6 +39,26 @@ class Movie(models.Model):
         self.save()
 
 
+class Person(models.Model):
+    name = models.CharField(max_length=255)
+    birthdate = models.DateField(blank=True, null=True)
+    nationality = models.CharField(max_length=255, blank=True, null=True)
+    imdb_id = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Cast(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='cast_members')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movie_roles')
+    role_name = models.CharField(max_length=255)
+    character_name = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.person.name} as {self.character_name} in {self.movie.title}"
+
+
 class UserPreference(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
