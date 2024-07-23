@@ -1,5 +1,6 @@
 import pandas as pd
 from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
 from movies.models import Movie
 
@@ -14,7 +15,7 @@ class Command(BaseCommand):
         csv_file = kwargs['csv_file']
         df = pd.read_csv(csv_file, low_memory=False)
 
-        for _, row in df.iterrows():
+        for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Processing Movie"):
             imdb_id = row.get('imdb_id')
             overview = row.get('overview')
 
@@ -23,4 +24,3 @@ class Command(BaseCommand):
             if movie:
                 movie.overview = overview if pd.notna(overview) else movie.overview
                 movie.save()
-                self.stdout.write(self.style.SUCCESS(f'Overview updated for: {movie.title}'))
