@@ -1,14 +1,19 @@
+import json
+import os
+
+import pandas as pd
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Movie, UserPreference, UserRating, Genre
-from .serializers import MovieSerializer, UserRatingSerializer, GenreSerializer
+from movies.utils.recommendations import build_chart
+from .models import Movie
+from .models import UserPreference, UserRating, Genre
+from .serializers import UserRatingSerializer, GenreSerializer, MovieSerializer
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -29,6 +34,24 @@ class GenreListCreate(generics.ListCreateAPIView):
 class GenreRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+
+
+@api_view(['GET'])
+def get_recommended_genre(request, *args, **kwargs):
+    genre = request.query_params.get('genre', None)
+    if not genre:
+        return Response({'error': 'Genre parameter is required.'}, status=400)
+
+    filename = f"dataset/{genre}_movies_data.csv"
+    filename = os.path.join(settings.BASE_DIR, filename)
+    if not os.path.isfile(filename):
+        return Response({'error': 'Database not found.'}, status=500)
+
+    recommended_df = pd.read_csv(filename)
+    movie_titles = recommended_df[:15]['title'].tolist()
+    movies = Movie.objects.filter(title__in=movie_titles)
+    serializer = MovieSerializer(movies, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])

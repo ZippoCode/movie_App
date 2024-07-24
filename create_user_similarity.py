@@ -1,44 +1,53 @@
+import json
 import os
 
 import django
-import numpy as np
 import pandas as pd
 from django.db.models import Prefetch
 from tqdm import tqdm
 
+from movies.utils.recommendations import build_chart
+
 os.environ['DJANGO_SETTINGS_MODULE'] = 'movie_app.settings'
 django.setup()
+pd.set_option('display.max_columns', None)
 
-from movies.models import Movie
+from movies.models import Movie, Genre
 
-
-def build_measure(df: pd.DataFrame):
-    vote_counts = df[df['num_votes'].notnull()]['num_votes'].astype('int')
-    vote_averages = df[df['average_rating'].notnull()]['average_rating'].astype('int')
-    c = vote_averages.mean()
-    m = vote_counts.quantile(0.95)
-    return c, m
+DATASET_DIR = 'dataset'
+os.makedirs(DATASET_DIR, exist_ok=True)
 
 
-def create_user_similarity(filename="movies_data.csv"):
+def create_movies_data(filename="movies_data.csv"):
+    filename = os.path.join(filename)
     if not os.path.exists(filename):
         movies = Movie.objects.prefetch_related(Prefetch('genres'))
         data = []
 
         for movie in tqdm(movies.iterator(), total=movies.count(), desc="Processing Movies"):
             movie_data = movie.__class__.objects.filter(pk=movie.pk).values().first()
-            genre_names = [genre.name for genre in movie.genres.all()]
-            movie_data['genres'] = ', '.join(genre_names)
+            movie_data['genres'] = [genre.name for genre in movie.genres.all()]
             data.append(movie_data)
 
         df = pd.DataFrame(data)
+        df['genres'] = df['genres'].apply(json.dumps)
         df.to_csv(filename, index=False)
     else:
         df = pd.read_csv(filename)
+        df['genres'] = df['genres'].apply(json.loads)
 
-    average_rating, mean_rating = build_measure(df)
-    print(average_rating, mean_rating)
+
+def create_genre_dataset(filename="movies_data.csv"):
+    if not os.path.exists(filename):
+        create_movies_data()
+    genres = Genre.objects.values_list('name', flat=True).distinct()
+    df = pd.read_csv(filename)
+    df['genres'] = df['genres'].apply(json.loads)
+    for genre in tqdm(genres, total=genres.count()):
+        recommendations_df = build_chart(df, genre, 1000)
+        destination_filename = os.path.join(DATASET_DIR, f"{genre}_movies_data.csv")
+        recommendations_df.to_csv(destination_filename, index=False)
 
 
 if __name__ == '__main__':
-    create_user_similarity()
+    create_genre_dataset()

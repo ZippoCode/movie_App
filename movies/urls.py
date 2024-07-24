@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .apis.recommendations_api import recommend_movies, user_statistics
 from .views import MovieViewSet, add_favorite, user_favorites, UserRatingListCreate, GenreListCreate, \
-    GenreRetrieveUpdateDestroy, movies_by_genre
+    GenreRetrieveUpdateDestroy, movies_by_genre, get_recommended_genre
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet)
@@ -17,5 +17,6 @@ urlpatterns = [
     path('genres/<int:pk>/', GenreRetrieveUpdateDestroy.as_view(), name='genre-detail'),
     path('genres/<int:genre_id>/movies/', movies_by_genre, name='movies_by_genre'),
     path('recommendations/<int:user_id>/', recommend_movies, name='recommend_movies'),
+    path('recommendations/genre/', get_recommended_genre, name='movie-recommendations'),
     path('user/<int:user_id>/statistics/', user_statistics, name='user_favorite_genre_statistics'),
 ]
