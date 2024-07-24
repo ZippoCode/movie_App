@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Count, Avg, Q
 from django.shortcuts import get_object_or_404
@@ -55,3 +56,24 @@ def user_statistics(request, user_id):
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_recommended_genre(request, *args, **kwargs):
+    genre_name = request.query_params.get('name', None)
+    if not genre_name:
+        return Response({'error': 'Genre parameter is required.'}, status=400)
+
+    genre_name = genre_name.capitalize()
+    if not Genre.objects.filter(name=genre_name).exists():
+        return Response({'error': 'Genre not found.'}, status=401)
+
+    filename = os.path.join(settings.DATASET_DIR, f"{genre_name}_movies_data.csv")
+    if not os.path.isfile(filename):
+        return Response({'error': 'Database not found.'}, status=500)
+
+    recommended_df = pd.read_csv(filename)
+    movie_titles = recommended_df[:15]['title'].tolist()
+    movies = Movie.objects.filter(title__in=movie_titles)
+    serializer = MovieSerializer(movies, many=True)
+    return Response(serializer.data)

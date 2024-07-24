@@ -3,6 +3,7 @@ import os
 
 import django
 import pandas as pd
+from django.conf import settings
 from django.db.models import Prefetch
 from tqdm import tqdm
 
@@ -14,8 +15,9 @@ pd.set_option('display.max_columns', None)
 
 from movies.models import Movie, Genre
 
-DATASET_DIR = 'dataset'
-os.makedirs(DATASET_DIR, exist_ok=True)
+if not os.path.exists(settings.DATASET_DIR):
+    os.makedirs(settings.DATASET_DIR, exist_ok=True)
+    print("Dataset directory created.")
 
 
 def create_movies_data(filename="movies_data.csv"):
@@ -45,7 +47,7 @@ def create_genre_dataset(filename="movies_data.csv"):
     df['genres'] = df['genres'].apply(json.loads)
     for genre in tqdm(genres, total=genres.count()):
         recommendations_df = build_chart(df, genre, 1000)
-        destination_filename = os.path.join(DATASET_DIR, f"{genre}_movies_data.csv")
+        destination_filename = os.path.join(settings.DATASET_DIR, f"{genre}_movies_data.csv".lower())
         recommendations_df.to_csv(destination_filename, index=False)
 
 

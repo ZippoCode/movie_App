@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .apis.recommendations_api import recommend_movies, user_statistics
+from .apis.recommendations_api import recommend_movies, user_statistics, get_recommended_genre
 from .views import MovieViewSet, add_favorite, user_favorites, UserRatingListCreate, GenreListCreate, \
-    GenreRetrieveUpdateDestroy, movies_by_genre, get_recommended_genre
+    GenreRetrieveUpdateDestroy, movies_by_genre
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet)
