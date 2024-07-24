@@ -23,6 +23,7 @@ class Command(BaseCommand):
             vote_count = row.get('vote_count')
             vote_average = row.get('vote_average')
             popularity = row.get('popularity')
+            tagline = row.get('tagline')
             if not imdb_id:
                 continue
 
@@ -33,6 +34,7 @@ class Command(BaseCommand):
                 movie.num_votes = vote_count if pd.notna(vote_count) else movie.num_votes
                 movie.average_rating = vote_average if pd.notna(vote_average) else movie.average_rating
                 movie.popularity = popularity if pd.notna(popularity) else movie.popularity
+                movie.tagline = tagline if pd.notna(tagline) else movie.tagline
                 movie.save()
                 modified_count += 1
                 progress_bar.set_description(f"Processing Movies ({modified_count} updated)")

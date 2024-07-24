@@ -98,13 +98,14 @@ def get_recommended_movie_by_title(request):
     with open(index_map_filename, 'rb') as f:
         index_map = pickle.load(f)
 
-    movies_df = pd.DataFrame(list(Movie.objects.values('id', 'title', 'overview')))
-    movies_df['title'] = movies_df['title'].str.title()  # Normalize the title format
+    movies_df = pd.DataFrame(list(Movie.objects.values()))
+    movies_df['title'] = movies_df['title'].str.title()
+    movie = Movie.objects.get(title=title)
+    print(movie.__dict__)
 
     if title not in movies_df['title'].values:
         return JsonResponse({'error': f'Movie with title {title} not found.'}, status=404)
 
-    # Retrieve the movie ID and use the index map to get the corresponding index
     movie_id = movies_df[movies_df['title'] == title]['id'].values[0]
     idx = index_map.get(movie_id, None)
 

@@ -61,17 +61,19 @@ def create_content_based_recommendation(filename="movies_data.csv", matrix_filen
         create_movies_data()
 
     df = pd.read_csv(filename)
-    df.dropna(subset=['overview'], inplace=True)
+    df['description'] = df['overview'] + df['tagline']
+    print(df[df['title'] == "The Godfather"])
+    df.dropna(subset=['description'], inplace=True)
+
+    index_map = {original_id: new_idx for new_idx, original_id in enumerate(df['id'])}
+    with open(os.path.join(settings.DATASET_DIR, index_map_filename), 'wb') as f:
+        pickle.dump(index_map, f)
 
     tfidf_vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), stop_words='english')
-    tfidf_matrix = tfidf_vectorizer.fit_transform(df['overview'])
+    tfidf_matrix = tfidf_vectorizer.fit_transform(df['description'])
     cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 
     np.save(os.path.join(settings.DATASET_DIR, matrix_filename), cosine_sim)
-
-    index_map = pd.Series(df.index, index=df['id']).to_dict()
-    with open(os.path.join(settings.DATASET_DIR, index_map_filename), 'wb') as f:
-        pickle.dump(index_map, f)
 
     print("Similarity matrix and index map saved.")
 

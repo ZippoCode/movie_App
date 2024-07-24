@@ -19,6 +19,7 @@ class Movie(models.Model):
     # director = models.CharField(max_length=255, blank=True, null=True)
     release_year = models.IntegerField(blank=True, null=True)
     overview = models.TextField(blank=True, null=True)
+    tagline = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     genres = models.ManyToManyField(Genre, related_name='movies')
     num_votes = models.PositiveIntegerField(default=0)
