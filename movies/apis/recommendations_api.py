@@ -1,10 +1,12 @@
 import os
+import pickle
 
 import numpy as np
 import pandas as pd
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Count, Avg, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -77,3 +79,44 @@ def get_recommended_genre(request, *args, **kwargs):
     movies = Movie.objects.filter(title__in=movie_titles)
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_recommended_movie_by_title(request):
+    title = request.query_params.get('title', None)
+    if not title:
+        return JsonResponse({'error': 'Title parameter is required.'}, status=400)
+
+    title = title.title()
+    matrix_filename = os.path.join(settings.DATASET_DIR, "cosine_similarity_matrix.npy")
+    index_map_filename = os.path.join(settings.DATASET_DIR, "movie_index_map.pkl")
+
+    if not os.path.isfile(matrix_filename) or not os.path.isfile(index_map_filename):
+        return JsonResponse({'error': 'Data files not found.'}, status=500)
+
+    cosine_sim = np.load(matrix_filename)
+    with open(index_map_filename, 'rb') as f:
+        index_map = pickle.load(f)
+
+    movies_df = pd.DataFrame(list(Movie.objects.values('id', 'title', 'overview')))
+    movies_df['title'] = movies_df['title'].str.title()  # Normalize the title format
+
+    if title not in movies_df['title'].values:
+        return JsonResponse({'error': f'Movie with title {title} not found.'}, status=404)
+
+    # Retrieve the movie ID and use the index map to get the corresponding index
+    movie_id = movies_df[movies_df['title'] == title]['id'].values[0]
+    idx = index_map.get(movie_id, None)
+
+    if idx is None:
+        return JsonResponse({'error': f'Movie with title {title} not in similarity matrix.'}, status=404)
+
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:11]  # Get top 10 recommendations
+    movie_indices_list = [i[0] for i in sim_scores]
+
+    # Use the indices from the similarity matrix to get recommended movies
+    recommended_movies = movies_df.iloc[movie_indices_list].to_dict('records')
+
+    return JsonResponse(recommended_movies, safe=False, status=200)

@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Movie
@@ -13,16 +14,17 @@ from .serializers import UserRatingSerializer, GenreSerializer, MovieSerializer
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+    pagination_class = PageNumberPagination
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 
 class UserRatingListCreate(generics.ListCreateAPIView):
     queryset = UserRating.objects.all()
     serializer_class = UserRatingSerializer
-
-
-class GenreListCreate(generics.ListCreateAPIView):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
 
 
 class GenreRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):

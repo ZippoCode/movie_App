@@ -1,10 +1,14 @@
 import json
 import os
+import pickle
 
 import django
+import numpy as np
 import pandas as pd
 from django.conf import settings
 from django.db.models import Prefetch
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 from tqdm import tqdm
 
 from movies.utils.recommendations import build_chart
@@ -51,5 +55,27 @@ def create_genre_dataset(filename="movies_data.csv"):
         recommendations_df.to_csv(destination_filename, index=False)
 
 
+def create_content_based_recommendation(filename="movies_data.csv", matrix_filename="cosine_similarity_matrix.npy",
+                                        index_map_filename="movie_index_map.pkl"):
+    if not os.path.exists(filename):
+        create_movies_data()
+
+    df = pd.read_csv(filename)
+    df.dropna(subset=['overview'], inplace=True)
+
+    tfidf_vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), stop_words='english')
+    tfidf_matrix = tfidf_vectorizer.fit_transform(df['overview'])
+    cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+
+    np.save(os.path.join(settings.DATASET_DIR, matrix_filename), cosine_sim)
+
+    index_map = pd.Series(df.index, index=df['id']).to_dict()
+    with open(os.path.join(settings.DATASET_DIR, index_map_filename), 'wb') as f:
+        pickle.dump(index_map, f)
+
+    print("Similarity matrix and index map saved.")
+
+
 if __name__ == '__main__':
-    create_genre_dataset()
+    # create_genre_dataset()
+    create_content_based_recommendation()
