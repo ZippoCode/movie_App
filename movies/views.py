@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
@@ -6,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .filters import MovieFilter
 from .models import Movie, UserPreference, UserRating, Genre
 from .serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
 
@@ -123,18 +125,11 @@ class GenreRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GenreSerializer
 
 
-class SearchMovieView(APIView):
-    def get(self, request, *args, **kwargs):
-        title = request.query_params.get('title', None)
-        if not title:
-            return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        movies = Movie.objects.filter(title__icontains=title)
-        paginator = PageNumberPagination()
-        paginated_movies = paginator.paginate_queryset(movies, request)
-
-        serializer = MovieSerializer(paginated_movies, many=True)
-        return paginator.get_paginated_response(serializer.data)
+class SearchMovieView(viewsets.ReadOnlyModelViewSet):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = MovieFilter
 
 
 class MovieByGenreViewSet(viewsets.ViewSet):
