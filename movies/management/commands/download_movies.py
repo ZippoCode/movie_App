@@ -48,14 +48,26 @@ class Command(BaseCommand):
             imdb_id = get_value(movie_details, 'imdb_id')
             movie_obj = Movie.objects.filter(imdb_id=imdb_id).first()
             if movie_obj:
-                if movie_obj.overview is None:
-                    overview = get_value(movie_details, 'overview')
-                    movie_obj.overview = overview if overview is not '' else None
-                if movie_obj.tagline is None:
-                    tagline = get_value(movie_details, 'tagline')
-                    movie_obj.tagline = tagline if tagline is not '' else None
-                movie_obj.save()
-                self.stdout.write(self.style.SUCCESS(f"Updated {movie_obj.title}"))
+                fields_to_update = {
+                    'overview': ('overview', str),
+                    'tagline': ('tagline', str),
+                    'num_votes': ('vote_count', int),
+                    'average_rating': ('vote_average', float),
+                    'popularity': ('popularity', float)
+                }
+
+                changes = []
+                for field, (api_field, expected_type) in fields_to_update.items():
+                    new_value = get_value(movie_details, api_field)
+                    setattr(movie_obj, field, new_value)
+                    changes.append(field)
+
+                if changes:
+                    movie_obj.save()
+                    change_message = ", ".join(changes)
+                    self.stdout.write(self.style.SUCCESS(f"Updated fields for '{movie_obj.title}': {change_message}"))
+                else:
+                    self.stdout.write(self.style.SUCCESS(f"No updates needed for '{movie_obj.title}'"))
 
         def store_movie(results):
             for movie in results['results']:
