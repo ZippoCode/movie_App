@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from .apis.recommendations_api import recommend_movies, user_statistics, get_recommended_genre, \
     get_recommended_movie_by_title
-from .views import MovieViewSet, add_favorite, UserFavoriteMoviesViewSet, UserRatingListCreate, GenreViewSet, \
-    MovieByGenreViewSet,SearchMovieView
+from .views import MovieViewSet, add_favorite, UserFavoriteMoviesViewSet, RatedMoviesView, GenreViewSet, \
+    MovieByGenreViewSet, SearchMovieView, MovieRatingView
 
 router = DefaultRouter()
 router.register(r'movie', MovieViewSet, basename='movie')
@@ -24,7 +24,8 @@ urlpatterns = [
     path('favorites/add/<int:movie_id>/', add_favorite, name='add_favorite'),
 
     # Ratings
-    path('ratings/', UserRatingListCreate.as_view(), name='user-rating-list-create'),
+    path('account/<int:account_id>/rated/movies/', RatedMoviesView.as_view(), name='rated-movies'),
+    path('movie/<int:movie_id>/rating/', MovieRatingView.as_view(), name='movie-rating'),
 
     # Recommendations
     path('recommendations/user/<int:user_id>/', recommend_movies, name='recommend_movies'),

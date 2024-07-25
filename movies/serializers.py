@@ -35,3 +35,4 @@ class UserRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRating
         fields = ['user', 'movie', 'rating']
+        read_only_fields = ['user', 'movie']

@@ -7,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Movie, UserPreference, UserRating, Genre
-from .serializers import UserRatingSerializer, GenreSerializer, MovieSerializer
+from .serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     pagination_class = PageNumberPagination
@@ -22,10 +22,100 @@ class GenreViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 
-class UserRatingListCreate(generics.ListCreateAPIView):
-    queryset = UserRating.objects.all()
-    serializer_class = UserRatingSerializer
-    pagination_class = PageNumberPagination
+class RatedMoviesView(generics.ListAPIView):
+    serializer_class = MovieSerializer
+
+    def get_queryset(self):
+        account_id = self.kwargs.get('account_id')
+
+        try:
+            user = User.objects.get(id=account_id)
+        except User.DoesNotExist:
+            return Movie.objects.none()
+
+        rated_movies = UserRating.objects.filter(user=user).select_related('movie')
+        return [rating.movie for rating in rated_movies]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset:
+            return Response({"error": "User not found or no rated movies."}, status=404)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class MovieRatingView(APIView):
+
+    def post(self, request, movie_id):
+
+        try:
+            movie = Movie.objects.get(id=movie_id)
+        except Movie.DoesNotExist:
+            return Response({"error": "Movie not found."}, status=404)
+
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=400)
+
+        rating = request.data.get('rating')
+        if not rating:
+            return Response({"error": "Rating is required."}, status=400)
+        try:
+            rating, created = UserRating.objects.get_or_create(user_id=user_id, movie=movie, rating=rating)
+            serializer = UserRatingSerializer(rating, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, movie_id):
+        user_id = request.data.get('user_id')
+        rating_value = request.data.get('rating')
+
+        try:
+            movie = Movie.objects.get(id=movie_id)
+        except Movie.DoesNotExist:
+            return Response({"error": "Movie not found."}, status=404)
+
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=400)
+
+        try:
+            rating = UserRating.objects.get(user_id=user_id, movie=movie)
+        except UserRating.DoesNotExist:
+            return Response({"error": "Rating not found."}, status=404)
+
+        serializer = UserRatingSerializer(rating, data={'rating': rating_value}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, movie_id):
+        user_id = request.data.get('user_id')
+
+        try:
+            movie = Movie.objects.get(id=movie_id)
+        except Movie.DoesNotExist:
+            return Response({"error": "Movie not found."}, status=404)
+
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=400)
+
+        rating = UserRating.objects.filter(user_id=user_id, movie=movie).first()
+
+        if rating:
+            rating.delete()
+            return Response({"message": "Rating deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"error": "Rating not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 class GenreRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
@@ -40,8 +130,11 @@ class SearchMovieView(APIView):
             return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         movies = Movie.objects.filter(title__icontains=title)
-        serializer = MovieSerializer(movies, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        paginator = PageNumberPagination()
+        paginated_movies = paginator.paginate_queryset(movies, request)
+
+        serializer = MovieSerializer(paginated_movies, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class MovieByGenreViewSet(viewsets.ViewSet):
