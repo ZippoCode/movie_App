@@ -6,7 +6,7 @@ from .models import Movie, UserPreference, UserRating, Genre
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ['id', 'name']
+        fields = '__all__'
 
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -15,7 +15,12 @@ class MovieSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+        genres_data = validated_data.pop('genres', [])
         movie = Movie.objects.create(**validated_data)
+        for genre_data in genres_data:
+            print(genre_data)
+            genre, created = Genre.objects.get_or_create(**genre_data)
+            movie.genres.add(genre)
         return movie
 
 
