@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from .apis.generative_ai_apis import generate_image_view
 from .apis.recommendations_api import recommend_movies, user_statistics, get_recommended_genre, \
     get_recommended_movie_by_title
 from .views import MovieViewSet, add_favorite, UserFavoriteMoviesViewSet, RatedMoviesView, GenreViewSet, \
@@ -32,4 +33,7 @@ urlpatterns = [
 
     # User Statistics
     path('user/<int:user_id>/statistics/', user_statistics, name='user_favorite_genre_statistics'),
+
+    # Generative
+    path('generate-image/', generate_image_view, name='generate_image'),
 ]
