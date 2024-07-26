@@ -1,10 +1,16 @@
+accelerate==0.33.0
+diffusers==0.29.2
 Django==4.2.14
 django-filter==24.2
 djangorestframework==3.15.2
 Markdown==3.6
-numpy==2.0.1
+numpy==1.26.4
 pandas==2.2.2
 python-dotenv==1.0.1
 requests==2.32.3
 scikit-learn==1.5.1
 tqdm==4.66.4
+torch==2.4.0
+torchaudio==2.4.0
+torchvision==0.19.0
+transformers==4.43.2

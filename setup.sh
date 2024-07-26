@@ -15,3 +15,4 @@ echo "Packages installed from requirements.txt."
 # Configure environment
 python3 manage.py makemigrations movies
 python3 manage.py migrate
+python3 manage.py load_model_weights

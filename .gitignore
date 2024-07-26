@@ -168,3 +168,5 @@ cython_debug/
 # Database stuff:
 *.tsv
 *.csv
+*.npy
+*.pkl
