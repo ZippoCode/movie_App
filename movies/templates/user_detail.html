@@ -25,18 +25,32 @@
                 {% for rating in user_ratings %}
                     <div class="col-md-3 mb-4">
                         <div class="card h-100">
-                            <img src="{{ rating.movie.poster_url }}" class="card-img-top"
-                                 alt="{{ rating.movie.title }}">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ rating.movie.title }}</h5>
-                                <p class="card-text">
-                                    <span>Release Year: {{ rating.movie.release_year }}</span><br>
-                                    <span>Rating: {{ rating.rating }}</span> <i class="bi bi-star-fill"
-                                                                                style="color: #ffd700;"></i>
-                                </p>
+                            <div class="row g-0">
+                                <!-- Colonna per l'immagine -->
+                                <div class="col-4">
+                                    {% if movie.get_poster_url %}
+                                        <img src="{{ movie.get_poster_url }}" class="img-fluid rounded-start"
+                                             alt="{{ movie.title }}">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/300x450?text=No+Image"
+                                             class="img-fluid rounded-start" alt="No Image Available">
+                                    {% endif %}
+                                </div>
+                                <!-- Colonna per i dettagli -->
+                                <div class="col-8">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ rating.movie.title }}</h5>
+                                        <p class="card-text">
+                                            <span>Release Year: {{ rating.movie.release_year }}</span><br>
+                                            <span>Rating: {{ rating.rating }}</span>
+                                            <i class="bi bi-star-fill" style="color: #ffd700;"></i>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 {% endfor %}
             </div>
         </div>

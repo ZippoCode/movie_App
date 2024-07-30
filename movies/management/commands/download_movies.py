@@ -53,7 +53,8 @@ class Command(BaseCommand):
                     'tagline': ('tagline', str),
                     'num_votes': ('vote_count', int),
                     'average_rating': ('vote_average', float),
-                    'popularity': ('popularity', float)
+                    'popularity': ('popularity', float),
+                    'tmdb_poster_path': ('poster_path', str),
                 }
 
                 changes = []

@@ -9,13 +9,18 @@
             {% for movie in movies %}
                 <div class="col-md-4 mb-4">
                     <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; color: inherit;">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ movie.title }}</h5>
-                                <p class="card-text">Release Year: {{ movie.release_year }}</p>
-                                <p class="card-text">{{ movie.overview|truncatewords:20 }}</p>
-                            </div>
+                      <div class="card h-100">
+                        {% if movie.get_poster_url %}
+                            <img src="{{ movie.get_poster_url }}" class="card-img-top" alt="{{ movie.title }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/500x750?text=No+Image" class="card-img-top" alt="No Image Available">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text">Release Year: {{ movie.release_year }}</p>
+                            <p class="card-text">{{ movie.overview|truncatewords:20 }}</p>
                         </div>
+                    </div>
                     </a>
                 </div>
             {% endfor %}

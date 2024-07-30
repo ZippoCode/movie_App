@@ -26,6 +26,7 @@ class Movie(models.Model):
     average_rating = models.FloatField(default=0.0)
     popularity = models.FloatField(default=0.0)
     imdb_id = models.CharField(max_length=255, blank=True, null=True)
+    tmdb_poster_path = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         unique_together = ('title', 'release_year')
@@ -39,6 +40,11 @@ class Movie(models.Model):
         self.num_ratings = ratings.count()
         self.avg_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0.0
         self.save()
+
+    def get_poster_url(self):
+        if self.tmdb_poster_path:
+            return f"https://image.tmdb.org/t/p/w500/{self.tmdb_poster_path}"
+        return None
 
 
 class Person(models.Model):
