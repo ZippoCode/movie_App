@@ -12,7 +12,7 @@ def generate_image_view(request):
     if not title:
         return HttpResponse("No title provided", status=400)
 
-    movie = Movie.objects.filter(title__icontains=title).first()
+    movie = Movie.objects.filter(title__exact=title).first()
     if not movie:
         return HttpResponse("Movie not found", status=404)
 
@@ -20,10 +20,8 @@ def generate_image_view(request):
     if not overview:
         return HttpResponse("Overview not found", status=404)
 
-    prompt = f"Poster Movie image with title {title} and overview {overview}"
-
     try:
-        image = generate_image(prompt)
+        image = generate_image(title, overview)
     except Exception as e:
         logging.error(f"Error generating image: {e}")
         return HttpResponse("Error generating image", status=500)

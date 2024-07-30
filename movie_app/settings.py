@@ -60,7 +60,7 @@ ROOT_URLCONF = 'movie_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'movies/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -137,3 +137,6 @@ CACHES = {
         'LOCATION': os.path.join(BASE_DIR, '.cache'),
     }
 }
+
+# SEED
+SEED = 30
