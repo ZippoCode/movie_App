@@ -1,8 +1,11 @@
 # movies/filters.py
 
 import django_filters
+from django import template
 
-from .models import Movie, Genre
+from movies.models import Movie, Genre
+
+register = template.Library()
 
 
 class MovieFilter(django_filters.FilterSet):
@@ -21,3 +24,11 @@ class MovieFilter(django_filters.FilterSet):
         model = Movie
         fields = ['title', 'release_year', 'overview', 'tagline', 'price', 'num_votes', 'average_rating', 'popularity',
                   'imdb_id', 'genres']
+
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    """
+    Adds a CSS class to form fields.
+    """
+    return field.as_widget(attrs={'class': css_class})

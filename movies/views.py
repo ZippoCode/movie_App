@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .filters import MovieFilter
+from movies.templatetags.filters import MovieFilter
 from .models import Movie, UserPreference, UserRating, Genre
 from .serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
 
