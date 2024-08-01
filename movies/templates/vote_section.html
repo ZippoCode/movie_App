@@ -1,0 +1,121 @@
+<div class="movie-rating-section mt-4">
+    <h3>Your Rating</h3>
+    <div id="user-rating-display">
+        <!-- This will be populated with the user's current rating or a form to add a rating -->
+    </div>
+    <div id="rating-form" class="mt-3" style="display: none;">
+        <label for="ratingInput" class="form-label">Rate this movie (0-10):</label>
+        <input type="number" id="ratingInput" min="0" max="10" class="form-control" placeholder="Enter your rating">
+        <button id="submitRating" class="btn btn-primary mt-2">Submit Rating</button>
+    </div>
+    <button id="deleteRating" class="btn btn-danger mt-2" style="display: none;">Delete Rating</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const movieId = {{ movie.id }};  // Assuming you have the movie ID available in your template context
+        const userId = {{ user.id }};    // Assuming you have the user ID available in your template context
+
+        const userRatingDisplay = document.getElementById('user-rating-display');
+        const ratingForm = document.getElementById('rating-form');
+        const ratingInput = document.getElementById('ratingInput');
+        const submitRatingButton = document.getElementById('submitRating');
+        const deleteRatingButton = document.getElementById('deleteRating');
+
+        // Function to fetch user's current rating
+        function fetchUserRating() {
+            fetch(`/api/movie/${movieId}/rating/`, {  // Use the updated API path
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,  // Include the user ID in the request
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    userRatingDisplay.innerHTML = "<p>You haven't rated this movie yet.</p>";
+                    ratingForm.style.display = 'block';
+                } else {
+                    userRatingDisplay.innerHTML = `<p>Your current rating: <strong>${data.rating}</strong></p>`;
+                    ratingInput.value = data.rating;
+                    ratingForm.style.display = 'block';
+                    deleteRatingButton.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user rating:', error);
+            });
+        }
+
+        // Function to handle rating submission
+        function submitRating() {
+            const ratingValue = parseInt(ratingInput.value);
+            if (!ratingValue && ratingValue !== 0 || ratingValue < 0 || ratingValue > 10) {  // Allow 0 as a valid input
+                alert("Please enter a valid rating between 0 and 10.");
+                return;
+            }
+
+            fetch(`/api/movie/${movieId}/rating/`, {  // Use the updated API path
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,  // Include the user ID in the request
+                    rating: ratingValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert("Rating submitted successfully!");
+                    fetchUserRating();  // Refresh the rating display
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting rating:', error);
+            });
+        }
+
+        // Function to handle rating deletion
+        function deleteRating() {
+            fetch(`/api/movie/${movieId}/rating/`, {  // Use the updated API path
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId  // Include the user ID in the request
+                })
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    alert("Rating deleted successfully!");
+                    fetchUserRating();  // Refresh the rating display
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting rating:', error);
+            });
+        }
+
+        // Attach event listeners
+        submitRatingButton.addEventListener('click', submitRating);
+        deleteRatingButton.addEventListener('click', deleteRating);
+
+        // Initial fetch of user rating
+        fetchUserRating();
+    });
+</script>
