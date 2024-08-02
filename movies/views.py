@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from movies.templatetags.filters import MovieFilter
-from .models import Movie, UserPreference, UserRating, Genre
-from .serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
+from movies.models import Movie, UserPreference, UserRating, Genre
+from movies.serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
 
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):

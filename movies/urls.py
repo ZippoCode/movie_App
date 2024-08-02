@@ -1,11 +1,16 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
 
+from movies.views import MovieViewSet, add_favorite, UserFavoriteMoviesViewSet, RatedMoviesView, \
+    GenreViewSet, MovieByGenreViewSet, SearchMovieView, MovieRatingView
 from .apis.generative_ai_apis import generate_image_view
 from .apis.recommendations_api import recommend_movies, user_statistics, get_recommended_genre, \
     get_recommended_movie_by_title
-from .views import MovieViewSet, add_favorite, UserFavoriteMoviesViewSet, RatedMoviesView, GenreViewSet, \
-    MovieByGenreViewSet, SearchMovieView, MovieRatingView
 
 router = DefaultRouter()
 router.register(r'movie', MovieViewSet, basename='movie')
@@ -36,4 +41,8 @@ urlpatterns = [
 
     # Generative
     path('generate-image/', generate_image_view, name='generate_image'),
+    # Login
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
