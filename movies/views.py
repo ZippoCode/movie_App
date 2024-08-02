@@ -1,15 +1,20 @@
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, viewsets
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from movies.models import UserPreference, Genre
+from movies.serializers import GenreSerializer, MovieSerializer
 from movies.templatetags.filters import MovieFilter
-from movies.models import Movie, UserPreference, UserRating, Genre
-from movies.serializers import GenreSerializer, MovieSerializer, UserRatingSerializer
+from .models import Movie, UserRating
+from .serializers import UserRatingSerializer
 
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
@@ -53,70 +58,55 @@ class RatedMoviesView(generics.ListAPIView):
 
 
 class MovieRatingView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, movie_id):
+        user = request.user
+        movie = get_object_or_404(Movie, id=movie_id)
+        rating_value = request.data.get('rating')
+        if not rating_value:
+            return Response({"error": "Rating is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            movie = Movie.objects.get(id=movie_id)
-        except Movie.DoesNotExist:
-            return Response({"error": "Movie not found."}, status=404)
-
-        user_id = request.data.get('user_id')
-        if not user_id:
-            return Response({"error": "User ID is required."}, status=400)
-
-        rating = request.data.get('rating')
-        if not rating:
-            return Response({"error": "Rating is required."}, status=400)
-        try:
-            rating, created = UserRating.objects.get_or_create(user_id=user_id, movie=movie, rating=rating)
-            serializer = UserRatingSerializer(rating, data=request.data, partial=True)
+            rating, created = UserRating.objects.get_or_create(user=user, movie=movie)
+            serializer = UserRatingSerializer(rating, data={'rating': rating_value}, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED
+                )
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, movie_id):
-        user_id = request.data.get('user_id')
+        user = request.user
+        movie = get_object_or_404(Movie, id=movie_id)
         rating_value = request.data.get('rating')
+        if not rating_value:
+            return Response({"error": "Rating is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            movie = Movie.objects.get(id=movie_id)
-        except Movie.DoesNotExist:
-            return Response({"error": "Movie not found."}, status=404)
-
-        if not user_id:
-            return Response({"error": "User ID is required."}, status=400)
-
-        try:
-            rating = UserRating.objects.get(user_id=user_id, movie=movie)
-        except UserRating.DoesNotExist:
-            return Response({"error": "Rating not found."}, status=404)
+        rating = get_object_or_404(UserRating, user=user, movie=movie)
 
         serializer = UserRatingSerializer(rating, data={'rating': rating_value}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, movie_id):
-        user_id = request.data.get('user_id')
-
-        try:
-            movie = Movie.objects.get(id=movie_id)
-        except Movie.DoesNotExist:
-            return Response({"error": "Movie not found."}, status=404)
-
-        if not user_id:
-            return Response({"error": "User ID is required."}, status=400)
-
-        rating = UserRating.objects.filter(user_id=user_id, movie=movie).first()
+        user = request.user
+        movie = get_object_or_404(Movie, id=movie_id)
+        rating = UserRating.objects.filter(user=user, movie=movie).first()
 
         if rating:
             rating.delete()
             return Response({"message": "Rating deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
         return Response({"error": "Rating not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
