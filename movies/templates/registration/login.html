@@ -7,30 +7,52 @@
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Aggiungere stili personalizzati per il login form */
         .login-container {
-            height: 100vh; /* Assicurati che occupi l'intera altezza della vista */
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            background-color: #f7f9fc;
         }
 
         .login-form {
             width: 100%;
-            max-width: 350px; /* Limita la larghezza massima del form */
-            padding: 20px;
+            max-width: 400px;
+            padding: 30px;
             background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .login-form h2 {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             text-align: center;
+            color: #333;
         }
 
         .login-form .btn-primary {
             width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-form .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .login-form .form-control {
+            height: 45px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -38,22 +60,70 @@
 <div class="container login-container">
     <div class="login-form">
         <h2>Login</h2>
-        <form method="post">
+        <form id="loginForm" method="post" novalidate>
             {% csrf_token %}
             <div class="mb-3">
                 {{ form.username.label_tag }}
                 {{ form.username|add_class:"form-control" }}
-                {{ form.username.errors }}
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {% for error in form.username.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <div class="mb-3">
                 {{ form.password.label_tag }}
                 {{ form.password|add_class:"form-control" }}
-                {{ form.password.errors }}
+                {% if form.password.errors %}
+                    <div class="error-message">
+                        {% for error in form.password.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
+            <div id="loginError" class="alert alert-danger d-none"></div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const username = document.querySelector('[name="username"]').value;
+        const password = document.querySelector('[name="password"]').value;
+
+        fetch('/api/token/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.access) {
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+
+                window.location.href = '/';
+            } else {
+                const errorElement = document.getElementById('loginError');
+                errorElement.classList.remove('d-none');
+                errorElement.innerText = 'Login failed: ' + (data.detail || 'Invalid credentials.');
+            }
+        })
+        .catch(error => {
+            console.error('Error during login:', error);
+        });
+    });
+</script>
 </body>
 </html>

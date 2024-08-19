@@ -26,7 +26,6 @@
                     <div class="col-md-3 mb-4">
                         <div class="card h-100">
                             <div class="row g-0">
-                                <!-- Colonna per l'immagine -->
                                 <div class="col-4">
                                     {% if movie.get_poster_url %}
                                         <img src="{{ movie.get_poster_url }}" class="img-fluid rounded-start"
@@ -36,7 +35,6 @@
                                              class="img-fluid rounded-start" alt="No Image Available">
                                     {% endif %}
                                 </div>
-                                <!-- Colonna per i dettagli -->
                                 <div class="col-8">
                                     <div class="card-body">
                                         <h5 class="card-title">{{ rating.movie.title }}</h5>
